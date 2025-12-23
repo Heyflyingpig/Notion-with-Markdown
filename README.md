@@ -1,6 +1,6 @@
 # MD to Notion Web
 
-一个，用于将 Markdown 内容转换并上传到 Notion。
+一个用于将 Markdown 内容正确转换并上传到 Notion的工具
 
 ## 功能特性
 
@@ -51,8 +51,9 @@ npm run dev
 
 1. 访问应用后，点击"开始配置向导"
 2. 输入您的 Notion API 密钥（[在此创建](https://www.notion.so/my-integrations)）
-3. 输入目标 Notion 页面的 URL
-4. 完成配置，开始上传！
+3. 新建一个目录，在其界面关联刚刚创建的集成
+4. 输入目标 Notion 页面的 URL
+5. 完成配置，开始上传！
 
 ## 使用说明
 
@@ -82,6 +83,10 @@ npm run dev
 - **Notion SDK**: @notionhq/client + @tryfabric/martian
 - **加密**: Node.js crypto (AES-256-CBC)
 
+## 核心实现
+- @tryfabric/martian：
+这是一个第三方库，用来把 Markdown 文本直接转换成 Notion API 需要的 Block 结构。
+
 ## 项目结构
 
 ```
@@ -106,16 +111,24 @@ MDtoNOTION/
 
 ### 如何获取 Notion API 密钥？
 
+![alt text](readme_img/image1.png)
 1. 访问 [Notion Integrations](https://www.notion.so/my-integrations)
 2. 点击"+ New integration"
 3. 填写名称并选择工作区
 4. 复制生成的 API 密钥
 
-### 如何获取 Notion 页面 URL？
-
+### 如何将页面关联集成？
+![alt text](readme_img/image2.png)
 1. 在 Notion 中打开目标页面
-2. 点击右上角的"Share"
-3. 复制页面链接
+2. 点击右下角的"集成按钮"
+3. 选择刚刚创建的集成
+
+
+### 如何获取 Notion 页面 URL？
+![alt text](readme_img/image3.png)
+1. 在 Notion 中打开目标页面
+2. 点击右上角的"拷贝"
+3. 粘贴至URL位置
 4. **重要：** 确保将页面共享给您的集成
 
 ### 上传失败怎么办？
@@ -127,7 +140,7 @@ MDtoNOTION/
 
 ## 许可证
 
-ISC
+MIT
 
 ## 贡献
 
