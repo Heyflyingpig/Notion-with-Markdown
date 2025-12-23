@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD to Notion - Markdown to Notion Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div x-data="app()" x-init="init()" class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="flex items-center space-x-2">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span class="text-xl font-bold text-gray-900">MD to Notion</span>
+            </a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button @click="currentView = 'dashboard'" :class="currentView === 'dashboard' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'" class="px-3 py-2 text-sm font-medium">仪表板</button>
+            <button @click="currentView = 'upload'" :class="currentView === 'upload' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'" class="px-3 py-2 text-sm font-medium">上传</button>
+            <button @click="currentView = 'config'" :class="currentView === 'config' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'" class="px-3 py-2 text-sm font-medium">配置</button>
+            <button @click="currentView = 'history'" :class="currentView === 'history' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'" class="px-3 py-2 text-sm font-medium">历史</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show" x-transition class="fixed top-4 right-4 z-50">
+      <div :class="toast.type === 'success' ? 'bg-green-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'" class="text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+        <span x-text="toast.message"></span>
+        <button @click="toast.show = false" class="ml-2 text-white/80 hover:text-white">&times;</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Setup Wizard (shows when not configured) -->
+      <template x-if="!status.configured && currentView === 'dashboard'">
+        <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+          <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">欢迎使用 MD to Notion</h2>
+          <p class="text-gray-600 mb-6">开始之前，请先设置您的 Notion API 连接</p>
+          <button @click="currentView = 'setup'" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium">开始配置向导</button>
+        </div>
+      </template>
+
+      <!-- Dashboard View (Configured) -->
+      <template x-if="status.configured && currentView === 'dashboard'">
+        <div x-data="dashboard()" x-init="init()">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">API 状态</p>
+                  <p class="text-xl font-semibold text-green-600">已连接</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">已配置页面</p>
+                  <p class="text-xl font-semibold" x-text="pageCount"></p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover cursor-pointer" @click="goToUpload()">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">快速操作</p>
+                  <p class="text-xl font-semibold text-blue-600">上传 Markdown</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold mb-4">最近上传</h3>
+            <template x-if="loading"><div class="flex justify-center py-8"><div class="spinner"></div></div></template>
+            <template x-if="!loading && recentHistory.length === 0"><p class="text-gray-500 text-center py-8">暂无上传历史</p></template>
+            <template x-if="!loading && recentHistory.length > 0">
+              <div class="space-y-3">
+                <template x-for="item in recentHistory" :key="item.id">
+                  <div class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50" :class="item.status === 'success' ? 'history-item success' : 'history-item failed'">
+                    <div class="flex items-center space-x-3">
+                      <span class="status-dot" :class="item.status === 'success' ? 'status-success' : 'status-error'"></span>
+                      <div>
+                        <p class="font-medium" x-text="item.title"></p>
+                        <p class="text-sm text-gray-500" x-text="formatDate(item.createdAt)"></p>
+                      </div>
+                    </div>
+                    <template x-if="item.notionUrl">
+                      <a :href="item.notionUrl" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">在 Notion 中打开</a>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Upload View -->
+      <template x-if="currentView === 'upload'">
+        <div x-data="uploadComponent()" x-init="init()" @toast.window="$root.showToast($event.detail.message, $event.detail.type)">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+              <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold mb-4">上传 Markdown</h2>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">标题（可选）</label>
+                    <input type="text" x-model="title" class="form-input" placeholder="留空则从 Markdown 中自动提取">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">目标页面</label>
+                    <select x-model="selectedPageId" class="form-input">
+                      <template x-for="page in pages" :key="page.id">
+                        <option :value="page.id" x-text="page.name + (page.isDefault ? ' (默认)' : '')"></option>
+                      </template>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="block text-sm font-medium text-gray-700">Markdown 内容</label>
+                      <div class="flex space-x-2">
+                        <button @click="pasteFromClipboard()" class="text-sm text-blue-600 hover:text-blue-800">粘贴</button>
+                        <button @click="clearInput()" class="text-sm text-gray-600 hover:text-gray-800">清空</button>
+                      </div>
+                    </div>
+                    <textarea x-model="markdown" @input="updateStats()" class="form-input markdown-input h-64" placeholder="在此粘贴或输入 Markdown 内容..."></textarea>
+                    <div class="flex justify-between text-sm text-gray-500 mt-1">
+                      <span x-text="`${stats.chars} 字符 | ${stats.lines} 行 | ${stats.words} 单词`"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="drop-zone p-8 text-center" :class="{ 'dragover': dragover }" @dragover="handleDragOver($event)" @dragleave="handleDragLeave()" @drop="handleDrop($event)">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <p class="text-gray-600 mb-2">拖拽 .md 或 .txt 文件到此处</p>
+                <input type="file" accept=".md,.txt" @change="handleFileSelect($event)" class="hidden" id="fileInput">
+                <label for="fileInput" class="text-blue-600 hover:text-blue-800 cursor-pointer">或点击选择文件</label>
+              </div>
+            </div>
+            <div class="space-y-6">
+              <div class="bg-white rounded-xl shadow-sm p-6">
+                <button @click="upload()" :disabled="uploading || !markdown.trim()" class="btn-primary w-full flex items-center justify-center">
+                  <span x-show="uploading" class="flex items-center"><div class="spinner mr-2"></div>上传中...</span>
+                  <span x-show="!uploading">上传到 Notion</span>
+                </button>
+                <template x-if="error"><p class="mt-3 text-sm text-red-600" x-text="error"></p></template>
+              </div>
+              <template x-if="uploadResult">
+                <div class="bg-green-50 border border-green-200 rounded-xl p-6">
+                  <div class="flex items-center mb-3">
+                    <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <h3 class="font-semibold text-green-800">上传成功！</h3>
+                  </div>
+                  <p class="text-sm text-green-700 mb-4" x-text="`页面：${uploadResult.page.title}`"></p>
+                  <div class="flex space-x-2">
+                    <button @click="openInNotion()" class="flex-1 bg-white text-green-700 border border-green-300 px-4 py-2 rounded-lg hover:bg-green-50 text-sm">在 Notion 中打开</button>
+                    <button @click="copyLink()" class="flex-1 bg-white text-green-700 border border-green-300 px-4 py-2 rounded-lg hover:bg-green-50 text-sm">复制链接</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Config View -->
+      <template x-if="currentView === 'config'">
+        <div x-data="configComponent()" x-init="init()" @toast.window="$root.showToast($event.detail.message, $event.detail.type)">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+              <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h2 class="text-xl font-semibold">页面配置</h2>
+                  <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">添加页面</button>
+                </div>
+                <template x-if="loading"><div class="flex justify-center py-8"><div class="spinner"></div></div></template>
+                <template x-if="!loading && pages.length === 0"><p class="text-gray-500 text-center py-8">暂无页面配置</p></template>
+                <template x-if="!loading && pages.length > 0">
+                  <div class="space-y-3">
+                    <template x-for="page in pages" :key="page.id">
+                      <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div>
+                          <div class="flex items-center space-x-2">
+                            <span class="font-medium" x-text="page.name"></span>
+                            <template x-if="page.isDefault"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">默认</span></template>
+                          </div>
+                          <p class="text-sm text-gray-500" x-text="'ID: ' + page.pageId.substring(0, 8) + '...'"></p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <template x-if="!page.isDefault"><button @click="setDefault(page.id)" class="text-sm text-gray-600 hover:text-gray-800">设为默认</button></template>
+                          <button @click="openEditModal(page)" class="text-sm text-blue-600 hover:text-blue-800">编辑</button>
+                          <button @click="deletePage(page.id)" class="text-sm text-red-600 hover:text-red-800">删除</button>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold mb-4">API 密钥</h2>
+                <button @click="showApiKeyModal = true" class="text-blue-600 hover:text-blue-800">更新 API 密钥</button>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 h-fit">
+              <h2 class="text-xl font-semibold mb-4">设置</h2>
+              <div class="space-y-4">
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" x-model="settings.autoOpenNotion" @change="updateSettings()" class="w-4 h-4 text-blue-600">
+                  <span class="text-sm">上传后自动打开 Notion</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" x-model="settings.autoClearInput" @change="updateSettings()" class="w-4 h-4 text-blue-600">
+                  <span class="text-sm">上传后自动清空输入</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!-- Add Page Modal -->
+          <template x-if="showAddModal">
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showAddModal = false">
+              <div class="bg-white rounded-xl p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4">添加页面配置</h3>
+                <div class="space-y-4">
+                  <div><label class="block text-sm font-medium mb-1">页面名称</label><input type="text" x-model="newPage.name" class="form-input" placeholder="我的 Notion 页面"></div>
+                  <div><label class="block text-sm font-medium mb-1">Notion 页面 URL</label><input type="text" x-model="newPage.pageUrl" class="form-input" placeholder="https://notion.so/..."></div>
+                  <template x-if="error"><p class="text-sm text-red-600" x-text="error"></p></template>
+                  <div class="flex space-x-3">
+                    <button @click="showAddModal = false" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+                    <button @click="addPage()" :disabled="validating" class="flex-1 btn-primary">
+                      <span x-show="!validating">添加</span><span x-show="validating">验证中...</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <!-- Edit Page Modal -->
+          <template x-if="showEditModal">
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showEditModal = false">
+              <div class="bg-white rounded-xl p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4">编辑页面配置</h3>
+                <div class="space-y-4">
+                  <div><label class="block text-sm font-medium mb-1">页面名称</label><input type="text" x-model="editingPage.name" class="form-input"></div>
+                  <label class="flex items-center space-x-2"><input type="checkbox" x-model="editingPage.isDefault" class="w-4 h-4"><span class="text-sm">设为默认</span></label>
+                  <template x-if="error"><p class="text-sm text-red-600" x-text="error"></p></template>
+                  <div class="flex space-x-3">
+                    <button @click="showEditModal = false" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+                    <button @click="updatePage()" :disabled="validating" class="flex-1 btn-primary">保存</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <!-- API Key Modal -->
+          <template x-if="showApiKeyModal">
+            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showApiKeyModal = false">
+              <div class="bg-white rounded-xl p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4">更新 API 密钥</h3>
+                <div class="space-y-4">
+                  <div><label class="block text-sm font-medium mb-1">新 API 密钥</label><input type="password" x-model="newApiKey" class="form-input" placeholder="secret_..."></div>
+                  <template x-if="error"><p class="text-sm text-red-600" x-text="error"></p></template>
+                  <div class="flex space-x-3">
+                    <button @click="showApiKeyModal = false" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+                    <button @click="updateApiKey()" :disabled="validating" class="flex-1 btn-primary">更新</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- History View -->
+      <template x-if="currentView === 'history'">
+        <div x-data="historyComponent()" x-init="init()">
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-semibold">上传历史</h2>
+              <input type="text" x-model="search" @input.debounce.300ms="loadHistory()" class="form-input w-64" placeholder="按标题搜索...">
+            </div>
+            <template x-if="loading"><div class="flex justify-center py-8"><div class="spinner"></div></div></template>
+            <template x-if="!loading && history.length === 0"><p class="text-gray-500 text-center py-8">未找到历史记录</p></template>
+            <template x-if="!loading && history.length > 0">
+              <div class="space-y-2">
+                <template x-for="item in history" :key="item.id">
+                  <div class="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50" :class="item.status === 'success' ? 'history-item success' : 'history-item failed'">
+                    <div class="flex items-center space-x-3">
+                      <span class="status-dot" :class="item.status === 'success' ? 'status-success' : 'status-error'"></span>
+                      <div>
+                        <p class="font-medium" x-text="item.title"></p>
+                        <p class="text-sm text-gray-500"><span x-text="item.pageConfigName"></span> - <span x-text="formatDate(item.createdAt)"></span></p>
+                      </div>
+                    </div>
+                    <template x-if="item.notionUrl"><button @click="openInNotion(item.notionUrl)" class="text-blue-600 hover:text-blue-800 text-sm">打开</button></template>
+                    <template x-if="item.error"><span class="text-sm text-red-600" x-text="item.error"></span></template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Setup Wizard View -->
+      <template x-if="currentView === 'setup'">
+        <div x-data="setupWizard()">
+          <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm p-8">
+              <!-- Step Indicators -->
+              <div class="flex items-center justify-between mb-8">
+                <template x-for="(s, i) in ['欢迎', 'API 密钥', '页面', '完成']" :key="i">
+                  <div class="step-item" :class="{ 'step-active': step === i+1, 'step-completed': step > i+1, 'step-inactive': step < i+1 }">
+                    <div class="step-number" x-text="step > i+1 ? '✓' : i+1"></div>
+                    <span class="ml-2 text-sm hidden sm:inline" x-text="s"></span>
+                  </div>
+                </template>
+              </div>
+              <!-- Step 1: Welcome -->
+              <template x-if="step === 1">
+                <div class="text-center">
+                  <h2 class="text-2xl font-bold mb-4">欢迎使用配置向导</h2>
+                  <p class="text-gray-600 mb-6">此向导将帮助您在几个简单步骤中完成 Notion 集成配置。</p>
+                  <button @click="nextStep()" class="btn-primary">开始配置</button>
+                </div>
+              </template>
+              <!-- Step 2: API Key -->
+              <template x-if="step === 2">
+                <div>
+                  <h2 class="text-2xl font-bold mb-4">Notion API 密钥</h2>
+                  <p class="text-gray-600 mb-4">输入您的 Notion 集成令牌。<a href="https://www.notion.so/my-integrations" target="_blank" class="text-blue-600 hover:underline">在此创建</a></p>
+                  <div class="space-y-4">
+                    <input type="password" x-model="apiKey" class="form-input" placeholder="secret_...">
+                    <template x-if="validated.apiKey"><div class="flex items-center text-green-600"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>验证成功！已连接为 <span class="ml-1 font-medium" x-text="validationResult.user?.name"></span></div></template>
+                    <template x-if="error"><p class="text-red-600" x-text="error"></p></template>
+                    <div class="flex space-x-3">
+                      <button @click="prevStep()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">返回</button>
+                      <button @click="validateApiKey()" :disabled="validating || !apiKey" class="btn-primary">
+                        <span x-show="validating">验证中...</span><span x-show="!validating">验证并继续</span>
+                      </button>
+                      <template x-if="validated.apiKey"><button @click="nextStep()" class="btn-primary">下一步</button></template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <!-- Step 3: Page URL -->
+              <template x-if="step === 3">
+                <div>
+                  <h2 class="text-2xl font-bold mb-4">目标页面</h2>
+                  <p class="text-gray-600 mb-4">输入您想要上传 Markdown 内容的 Notion 页面 URL。</p>
+                  <div class="space-y-4">
+                    <div><label class="block text-sm font-medium mb-1">页面 URL</label><input type="text" x-model="pageUrl" class="form-input" placeholder="https://notion.so/..."></div>
+                    <div><label class="block text-sm font-medium mb-1">页面名称</label><input type="text" x-model="pageName" class="form-input" placeholder="我的 Notion 页面"></div>
+                    <template x-if="validated.page"><div class="flex items-center text-green-600"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>找到页面：<span class="ml-1 font-medium" x-text="validationResult.page?.title"></span></div></template>
+                    <template x-if="error"><p class="text-red-600" x-text="error"></p></template>
+                    <div class="flex space-x-3">
+                      <button @click="prevStep()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">返回</button>
+                      <button @click="validatePage()" :disabled="validating || !pageUrl" class="btn-primary">
+                        <span x-show="validating">验证中...</span><span x-show="!validating">验证</span>
+                      </button>
+                      <template x-if="validated.page"><button @click="saveConfig()" :disabled="validating" class="btn-primary">保存并完成</button></template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <!-- Step 4: Done -->
+              <template x-if="step === 4">
+                <div class="text-center" x-data="{ goToUpload() { window.Alpine.store('appData').loadStatus(); window.Alpine.store('appData').currentView = 'upload'; } }">
+                  <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  <h2 class="text-2xl font-bold mb-4">配置完成！</h2>
+                  <p class="text-gray-600 mb-6">您的 Notion 集成已配置完成。现在可以开始上传 Markdown 了！</p>
+                  <button @click="window.location.reload()" class="btn-primary">开始上传</button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </main>
+  </div>
+
+  <!-- Load JS files -->
+  <script src="/js/app.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/upload.js"></script>
+</body>
+</html>
+

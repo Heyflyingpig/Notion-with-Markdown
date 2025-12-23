@@ -1,0 +1,185 @@
+/**
+ * custom.css - Custom styles for MD to Notion Web
+ */
+
+/* Smooth transitions */
+[x-cloak] {
+  display: none !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Markdown textarea */
+.markdown-input {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  tab-size: 2;
+  resize: vertical;
+  min-height: 300px;
+}
+
+/* File drop zone */
+.drop-zone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+/* Status indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-success {
+  background-color: #22c55e;
+}
+
+.status-error {
+  background-color: #ef4444;
+}
+
+.status-pending {
+  background-color: #f59e0b;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Form input styles */
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Step indicator */
+.step-item {
+  display: flex;
+  align-items: center;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.step-active .step-number {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.step-completed .step-number {
+  background-color: #22c55e;
+  color: white;
+}
+
+.step-inactive .step-number {
+  background-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+/* History list */
+.history-item {
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  background-color: #f8fafc;
+  border-left-color: #3b82f6;
+}
+
+.history-item.success {
+  border-left-color: #22c55e;
+}
+
+.history-item.failed {
+  border-left-color: #ef4444;
+}
+
