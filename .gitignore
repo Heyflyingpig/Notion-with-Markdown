@@ -1,5 +1,8 @@
 # Dependencies
 /node_modules
 /others
+
+# database
+/data/db.json
 # Environment variables
 .env

@@ -1,6 +1,11 @@
-# MD to Notion Web
+# Notion-with-Markdown
 
-一个用于将 Markdown 内容正确转换并上传到 Notion的工具
+>Fork自 https://github.com/TianCai19/m2n
+
+一个用于将 Markdown 内容正确转换(公式)并上传到 Notion 的可视化工具
+
+## demostration
+![demo](readme_img/demo.gif)
 
 ## 功能特性
 
@@ -63,6 +68,10 @@ npm run dev
 2. 选择目标页面
 3. 输入或粘贴 Markdown 内容
 4. 点击"上传到 Notion"
+**注意：对于LLM生成的内容，需要引导其生成语法包围结构，而不是直接复制粘贴**.
+可以正确转换格式类似如下
+![alt text](readme_img/image4.png)
+
 
 ### 管理页面配置
 
