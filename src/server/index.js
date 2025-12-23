@@ -1,6 +1,7 @@
 /**
  * index.js - Fastify server entry point
- * MD to Notion Web visualization interface
+ * Notion-with-Markdown
+ Web visualization interface
  */
 
 import { config } from 'dotenv';
@@ -109,7 +110,7 @@ async function start() {
     
     console.log(`
     =============================================
-      MD to Notion Web Server
+     Notion-with-Markdow Web Server
     =============================================
       Local:   http://${HOST}:${PORT}
       API:     http://${HOST}:${PORT}/api
