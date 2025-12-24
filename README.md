@@ -18,7 +18,9 @@
 ## 快速开始
 
 ### 0. 装前准备
+
 0.1 安装 Node.js（推荐 LTS 版本）和 npm（Node 包管理器）
+
 0.2 克隆本仓库
 ```bash
 git clone https://github.com/Heyflyingpig/Notion-with-Markdown.git
