@@ -17,6 +17,13 @@
 
 ## 快速开始
 
+### 0. 装前准备
+0.1 安装 Node.js（推荐 LTS 版本）和 npm（Node 包管理器）
+0.2 克隆本仓库
+```bash
+git clone https://github.com/Heyflyingpig/Notion-with-Markdown.git
+```
+
 ### 1. 安装依赖
 
 ```bash
@@ -37,6 +44,7 @@ SECRET_KEY=your_32_character_secret_key_here
 ```
 
 **重要：** 请更新 `SECRET_KEY` ,生成一个随机的 32 字符密钥用于生产环境。
+密码生成器：https://www.lddgo.net/string/randompassword
 
 ### 3. 启动服务器
 
